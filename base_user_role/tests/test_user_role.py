@@ -58,7 +58,7 @@ class TestUserRoleCommon(BaseCommon):
         # Setup for multi-company testing
         cls.multicompany_user_1 = cls.user_model.create(
             {
-                "name": "User 2",
+                "name": "multicompany_user_1",
                 "company_id": cls.company1.id,
                 "company_ids": [(6, 0, [cls.company1.id, cls.company2.id])],
                 "groups_id": [(6, 0, cls.env.ref("base.group_erp_manager").ids)],
@@ -67,7 +67,7 @@ class TestUserRoleCommon(BaseCommon):
         )
         cls.multicompany_user_2 = cls.user_model.create(
             {
-                "name": "User 2",
+                "name": "multicompany_user_2",
                 "company_id": cls.company2.id,
                 "company_ids": [(6, 0, [cls.company2.id])],
                 "groups_id": [(6, 0, cls.env.ref("base.group_user").ids)],
@@ -288,7 +288,9 @@ class TestUserRoleMail(TestUserRoleCommon):
         self.assertNotIn(notification_group, self.user_id.groups_id)
         self.user_id.notification_type = "inbox"
         self.assertIn(notification_group, self.user_id.groups_id)
-        self.user_id.write({"role_line_ids": [(0, 0, {"role_id": self.role1_id.id})]})
+        self.user_id.write(
+            {"role_line_ids": [Command.create({"role_id": self.role1_id.id})]}
+        )
         self.assertIn(notification_group, self.user_id.groups_id)
 
     def test_notification_type_reset(self):
@@ -315,7 +317,7 @@ class TestUserRoleMail(TestUserRoleCommon):
 
         self.user_id.write(
             {
-                "role_line_ids": [(0, 0, {"role_id": self.role1_id.id})],
+                "role_line_ids": [Command.create({"role_id": self.role1_id.id})],
                 "notification_type": "inbox",
             },
         )

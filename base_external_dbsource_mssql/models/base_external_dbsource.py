@@ -4,6 +4,7 @@
 # this is needed to generate connection string
 import pymssql
 import sqlalchemy
+from sqlalchemy import text
 
 from odoo import fields, models
 
@@ -34,6 +35,8 @@ class BaseExternalDbsource(models.Model):
 
     def _execute_mssql(self, sqlquery, sqlparams, metadata):
         rows, cols = list(), list()
+        # Convert to accepted object by sqlalchemy
+        sqlquery = text(sqlquery)
         for record in self:
             with record.connection_open() as connection:
                 if sqlparams is None:
@@ -45,4 +48,8 @@ class BaseExternalDbsource(models.Model):
                 # If the query doesn't return rows, trying to get them anyway
                 # will raise an exception `sqlalchemy.exc.ResourceClosedError`
                 rows = [r for r in cur] if cur.returns_rows else []
+                # cur.returns_rows is False for DML (INSERT/UPDATE/DELETE),
+                # which need an explicit commit to persist changes.
+                if not cur.returns_rows:
+                    connection.commit()
         return rows, cols
